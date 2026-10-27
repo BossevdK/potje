@@ -1,0 +1,16 @@
+.gradle/
+build/
+app/build/
+local.properties
+*.apk
+.kotlin/
+version.json
+
+# Ondertekeningssleutel + wachtwoord: nooit in git
+keystore/
+
+# Claude Code: skills en agents voor deze pc, niet voor de app
+.agents/
+.claude/skills/
+skills-lock.json
+build.log

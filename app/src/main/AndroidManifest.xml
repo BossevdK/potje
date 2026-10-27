@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Dagelijkse tip als melding (optioneel) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Updates via internet: Android vraagt de eerste keer zelf om toestemming -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <application
+        android:name=".PotjeApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="false"
+        android:theme="@style/Theme.Potje">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Crashpagina: eigen proces, zodat hij ook werkt als de hoofdapp helemaal vastloopt -->
+        <activity
+            android:name=".CrashActivity"
+            android:exported="false"
+            android:process=":crash"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:screenOrientation="portrait" />
+
+        <!-- Gedownloade update en geëxporteerde bestanden doorgeven aan de installer en de deel-knop -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
+        </provider>
+    </application>
+</manifest>
