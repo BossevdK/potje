@@ -3,19 +3,21 @@
   const P = window.P;
 
   const REGELS = [
-    ['Sparen & beleggen', ['spaarrekening', 'oranje spaarrekening', 'degiro', 'bux ', 'brand new day', 'meesman', 'sparen', 'beleggen', 'flatex', 'saxo']],
+    ['Sparen & beleggen', ['spaar', 'degiro', 'bux ', 'brand new day', 'meesman', 'sparen', 'beleggen', 'flatex', 'saxo']],
     ['Boodschappen', ['albert heijn', 'ah to go', 'jumbo', 'lidl', 'aldi', 'plus ', 'dirk', 'coop ', 'spar ', 'ekoplaza', 'picnic', 'hoogvliet', 'vomar', 'dekamarkt', 'boni', 'poiesz', 'nettorama', 'jan linders']],
     ['Eten & drinken', ['restaurant', 'thuisbezorgd', 'uber eats', 'deliveroo', 'mcdonald', 'burger king', 'kfc', 'starbucks', 'cafe', 'café', 'bakker', 'domino', 'subway', 'lunchroom', 'new york pizza', 'snackbar', 'bar ', 'eetcafe', 'grand cafe']],
-    ['Vervoer', ['ns groep', 'ns reizigers', 'ns-', 'shell', 'tango', 'tinq', 'esso', 'texaco', 'bp ', 'parkeren', 'q-park', 'ov-chip', 'translink', 'gvb', 'htm', 'ret ', 'anwb', 'uber', 'flixbus', 'swapfiets', 'bolt', 'tamoil', 'total ']],
-    ['Wonen', ['huur', 'hypotheek', 'vattenfall', 'eneco', 'essent', 'greenchoice', 'ziggo', 'kpn', 'odido', 'vitens', 'gemeente', 'waterschap', 'energie', 'woonstad', 'vve', 'woningcorporatie', 'waterbedrijf', 'pzem', 'budget energie', 'belastingdienst']],
-    ['Abonnementen', ['netflix', 'spotify', 'disney', 'videoland', 'youtube', 'apple.com/bill', 'google', 'amazon prime', 'hbo', 'storytel', 'dropbox', 'icloud', 'microsoft', 'openai', 'anthropic', 'adobe', 'strava']],
+    ['Vervoer', ['ovpay', 'ns international', 'circle k', 'ns groep', 'ns reizigers', 'ns-', 'shell', 'tango', 'tinq', 'esso', 'texaco', 'bp ', 'parkeren', 'q-park', 'ov-chip', 'translink', 'gvb', 'htm', 'ret ', 'anwb', 'uber', 'flixbus', 'swapfiets', 'bolt', 'tamoil', 'total ']],
+    ['Wonen', ['youfone', 'vodafone', 't-mobile', 'simyo', 'lebara', 'huur', 'hypotheek', 'vattenfall', 'eneco', 'essent', 'greenchoice', 'ziggo', 'kpn', 'odido', 'vitens', 'gemeente', 'waterschap', 'energie', 'woonstad', 'vve', 'woningcorporatie', 'waterbedrijf', 'pzem', 'budget energie', 'belastingdienst']],
+    ['Abonnementen', ['npo ', 'netflix', 'spotify', 'disney', 'videoland', 'youtube', 'apple.com/bill', 'google', 'amazon prime', 'hbo', 'storytel', 'dropbox', 'icloud', 'microsoft', 'openai', 'anthropic', 'adobe', 'strava']],
     ['Verzekering & zorg', ['verzekering', 'zilveren kruis', 'cz ', 'vgz', 'menzis', 'ditzo', 'apotheek', 'huisarts', 'tandarts', 'fysio', 'centraal beheer', 'nationale-nederlanden', 'aegon', 'a.s.r', 'achmea', 'ohra', 'unive', 'fbto', 'interpolis', 'zorg']],
-    ['Vrije tijd', ['bioscoop', 'pathe', 'pathé', 'theater', 'steam', 'playstation', 'nintendo', 'sportschool', 'basic-fit', 'fitness', 'museum', 'concert', 'ticketmaster', 'efteling', 'dierentuin', 'bol.com/kijk']],
-    ['Winkelen', ['bol.com', 'coolblue', 'zalando', 'h&m', 'hema', 'action', 'ikea', 'amazon', 'wehkamp', 'kruidvat', 'etos', 'primark', 'mediamarkt', 'blokker', 'gamma', 'praxis', 'intratuin', 'decathlon', 'vinted', 'marktplaats', 'ccv*']],
+    ['Vrije tijd', ['gaming', 'toto', 'bioscoop', 'pathe', 'pathé', 'theater', 'steam', 'playstation', 'nintendo', 'sportschool', 'basic-fit', 'fitness', 'museum', 'concert', 'ticketmaster', 'efteling', 'dierentuin', 'bol.com/kijk']],
+    ['Winkelen', ['klarna', 'bol.com', 'coolblue', 'zalando', 'h&m', 'hema', 'action', 'ikea', 'amazon', 'wehkamp', 'kruidvat', 'etos', 'primark', 'mediamarkt', 'blokker', 'gamma', 'praxis', 'intratuin', 'decathlon', 'vinted', 'marktplaats', 'ccv*']],
   ];
   P.categoriseer = function (bedrag, tekst) {
-    if (bedrag > 0) return 'Inkomen';
     const t = ' ' + tekst.toLowerCase() + ' ';
+    // Overboekingen van en naar je spaarrekening zijn geen inkomen of uitgave, ook niet als het geld terugkomt.
+    if (REGELS[0][1].some((s) => t.includes(s))) return REGELS[0][0];
+    if (bedrag > 0) return 'Inkomen';
     for (const [cat, sleutels] of REGELS) if (sleutels.some((s) => t.includes(s))) return cat;
     return 'Overig';
   };

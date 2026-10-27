@@ -111,7 +111,7 @@
       let r;
       if (f.pdf) {
         P.toast('PDF wordt gelezen…');
-        try { r = await P.leesAfschriftPdf(f.pdf); }
+        try { r = await P.leesAfschriftPdf(f.pdf, (p, n) => P.toast('PDF lezen: pagina ' + p + ' van ' + n)); }
         catch (e) { return P.blad('Import niet gelukt', () => h('p', {}, 'Dit PDF-bestand kon niet worden gelezen. Is het beveiligd met een wachtwoord of een scan van papier? Probeer een CSV.')); }
         if (!r.herkend) return P.blad('Geen transacties herkend', (sluit) => h('div', {},
           h('p', {}, 'Ik kon in deze PDF geen regels met een datum en een bedrag met plus of min vinden. Een PDF heeft geen vaste opmaak, dus dit kan per bank en per soort overzicht verschillen.'),
@@ -128,7 +128,10 @@
         return h('div', {},
           h('p', {}, h('b', {}, r.nieuw.length + ' nieuwe transacties'), ' van ' + P.korteDatum(data[0]) + ' tot ' + P.korteDatum(data[data.length - 1]) + '.'),
           r.dubbel ? h('p', { class: 'gedempt klein' }, r.dubbel + ' stonden al in Potje en worden overgeslagen.') : null,
-          f.pdf ? h('div', {}, h('p', { class: 'gedempt klein' }, 'Ik las ' + r.regels.length + ' regels tekst en vond er ' + r.herkend + ' met een datum en een bedrag met plus of min. Een PDF kan fouten geven: controleer of deze regels kloppen voor je importeert.'),
+          f.pdf ? h('div', {}, h('p', { class: 'gedempt klein' }, 'Gelezen als: ' + r.formaat + ' (' + r.regels.length + ' regels tekst, ' + r.herkend + ' transacties gevonden).'),
+            r.totalen
+              ? h('p', { class: 'klein ' + (r.totalen.klopt ? 'plus' : 'min') }, r.totalen.klopt ? 'De totalen kloppen met bovenaan je afschrift.' : 'De totalen kloppen niet met je afschrift (afschrift: ' + P.eur(r.totalen.af, true) + ' af en ' + P.eur(r.totalen.bij, true) + ' bij). Controleer de regels.')
+              : h('p', { class: 'gedempt klein' }, 'Een PDF kan fouten geven: controleer of deze regels kloppen voor je importeert.'),
             h('button', { class: 'link', onclick: () => P.kopieer(r.regels.slice(0, 80).join('\n')) }, 'Kopieer ingelezen tekst (eerste 80 regels)'),
             h('table', { class: 'tabel' }, r.nieuw.slice(0, 4).map((x) => h('tr', {}, h('td', {}, P.korteDatum(x.d)), h('td', {}, x.o.slice(0, 28)), h('td', { class: 'getal' }, (x.b > 0 ? '+' : '−') + P.eur(Math.abs(x.b), true)))))) : null,
           r.overgeslagen ? h('p', { class: 'gedempt klein' }, r.overgeslagen + ' regels met een bedrag maar zonder datum zijn overgeslagen.') : null,
