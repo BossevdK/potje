@@ -43,7 +43,7 @@
         h('p', { class: 'gedempt' }, 'Potje houdt bij wat je spaart, wat je uitgeeft en wat het later waard is. Alles blijft op je telefoon.')),
         h('ul', { class: 'regels' },
           stap('Maak een spaardoel', 'Een bedrag, een datum en een maandbedrag', () => P.nieuwDoel()),
-          stap('Importeer je Rabobank-afschrift', 'CSV uit je bank-app, ik deel het zelf in', () => { P.ga('uitgaven'); setTimeout(P.importeer, 50); }),
+          stap('Importeer je Rabobank-afschrift', 'CSV of PDF uit je bank-app, Potje deelt het zelf in', () => { P.ga('uitgaven'); setTimeout(P.importeer, 50); }),
           stap('Lees de eerste les', 'Betaal jezelf eerst, drie minuten', () => P.ga('leren'))));
     } else {
       const pr = P.prognose(jaren), n = pr.n, eind = pr.totaal[n], nu = pr.totaal[0], inleg = pr.inleg[n];

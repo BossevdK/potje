@@ -26,10 +26,10 @@
       h('div', {}, h('small', {}, 'Over'), h('b', { class: 'getal' + (over < 0 ? ' min' : '') }, P.eur(over)))));
     root.append(h('div', { class: 'knoppen' },
       h('button', { class: 'knop', onclick: () => P.transactieBlad() }, 'Toevoegen'),
-      h('button', { class: 'knop rand', onclick: P.importeer }, 'Importeer CSV')));
+      h('button', { class: 'knop rand', onclick: P.importeer }, 'Importeer bestand')));
 
     if (!P.d.transacties.length) {
-      root.append(h('div', { class: 'leeg' }, h('p', {}, 'Exporteer in de Rabobank-app je transacties als CSV en importeer ze hier. Potje deelt ze zelf in categorieën in. Je kunt ook uitgaven met de hand noteren.')));
+      root.append(h('div', { class: 'leeg' }, h('p', {}, 'Download in de Rabobank-app je transacties (CSV of PDF) en importeer ze hier. Potje deelt ze zelf in categorieën in. Je kunt ook uitgaven met de hand noteren.')));
       return root;
     }
 
@@ -93,9 +93,32 @@
     });
   };
 
+  // Kiest een CSV of PDF en geeft {tekst} of {pdf: ArrayBuffer} door.
+  P.kiesAfschrift = function (cb) {
+    const inp = h('input', { type: 'file', accept: '.csv,.pdf,text/csv,application/pdf,text/plain,*/*', style: 'position:fixed;left:-9999px' });
+    inp.addEventListener('change', () => {
+      const f = inp.files && inp.files[0]; inp.remove(); if (!f) return;
+      const pdf = /\.pdf$/i.test(f.name) || f.type === 'application/pdf', r = new FileReader();
+      r.onload = () => cb(pdf ? { pdf: r.result } : { tekst: String(r.result) });
+      r.onerror = () => P.toast('Het bestand kon niet worden gelezen');
+      if (pdf) r.readAsArrayBuffer(f); else r.readAsText(f);
+    });
+    document.body.append(inp); inp.click();
+  };
+
   P.importeer = function () {
-    P.kiesBestand('.csv,text/csv,text/plain,*/*', (tekst) => {
-      const r = P.leesAfschrift(tekst);
+    P.kiesAfschrift(async (f) => {
+      let r;
+      if (f.pdf) {
+        P.toast('PDF wordt gelezen…');
+        try { r = await P.leesAfschriftPdf(f.pdf); }
+        catch (e) { return P.blad('Import niet gelukt', () => h('p', {}, 'Dit PDF-bestand kon niet worden gelezen. Is het beveiligd met een wachtwoord of een scan van papier? Probeer een CSV.')); }
+        if (!r.herkend) return P.blad('Geen transacties herkend', (sluit) => h('div', {},
+          h('p', {}, 'Ik kon in deze PDF geen regels met een datum en een bedrag met plus of min vinden. Een PDF heeft geen vaste opmaak, dus dit kan per bank en per soort overzicht verschillen.'),
+          h('p', { class: 'gedempt' }, 'Je kunt de ingelezen tekst kopiëren en een paar regels daarvan met verzonnen namen en bedragen delen, zodat de import erop aangepast kan worden. Plak geen echte gegevens van jezelf of anderen.'),
+          h('div', { class: 'knoppen' }, h('button', { class: 'knop rand', onclick: () => sluit() }, 'Sluiten'),
+            h('button', { class: 'knop', onclick: () => P.kopieer(r.regels.slice(0, 60).join('\n')) }, 'Kopieer tekst'))));
+      } else r = P.leesAfschrift(f.tekst);
       if (r.fout) return P.blad('Import niet gelukt', () => h('p', {}, r.fout));
       if (!r.nieuw.length) return P.blad('Niets nieuws', () => h('p', { class: 'gedempt' }, r.dubbel ? 'Alle ' + r.dubbel + ' transacties stonden al in Potje.' : 'Er zijn geen transacties gevonden in dit bestand.'));
       P.blad('Importeren', (sluit) => {
@@ -105,7 +128,10 @@
         return h('div', {},
           h('p', {}, h('b', {}, r.nieuw.length + ' nieuwe transacties'), ' van ' + P.korteDatum(data[0]) + ' tot ' + P.korteDatum(data[data.length - 1]) + '.'),
           r.dubbel ? h('p', { class: 'gedempt klein' }, r.dubbel + ' stonden al in Potje en worden overgeslagen.') : null,
-          top.length ? h('table', { class: 'tabel' }, h('tr', {}, h('th', {}, 'Grootste categorieën'), h('th', {}, 'Uitgegeven')), top.map(([c, v]) => h('tr', {}, h('td', {}, c), h('td', { class: 'getal' }, P.eur(v))))) : null,
+          f.pdf ? h('div', {}, h('p', { class: 'gedempt klein' }, 'Uit een PDF lezen kan fouten geven. Controleer of deze regels kloppen voor je importeert:'),
+            h('table', { class: 'tabel' }, r.nieuw.slice(0, 4).map((x) => h('tr', {}, h('td', {}, P.korteDatum(x.d)), h('td', {}, x.o.slice(0, 28)), h('td', { class: 'getal' }, (x.b > 0 ? '+' : '−') + P.eur(Math.abs(x.b), true)))))) : null,
+          r.overgeslagen ? h('p', { class: 'gedempt klein' }, r.overgeslagen + ' regels met een bedrag maar zonder datum zijn overgeslagen.') : null,
+          top.length ? h('table', { class: 'tabel', style: 'margin-top:12px' }, h('tr', {}, h('th', {}, 'Grootste categorieën'), h('th', {}, 'Uitgegeven')), top.map(([c, v]) => h('tr', {}, h('td', {}, c), h('td', { class: 'getal' }, P.eur(v))))) : null,
           h('p', { class: 'gedempt klein', style: 'margin-top:12px' }, 'Je kunt de categorie van elke transactie daarna nog aanpassen.'),
           h('div', { class: 'knoppen' }, h('button', { class: 'knop rand', onclick: () => sluit() }, 'Annuleren'),
             h('button', { class: 'knop', onclick: () => { P.d.transacties.push(...r.nieuw); P.maand = P.mnd(data[data.length - 1]); P.bewaar(); sluit(); P.ga('uitgaven'); P.toast(r.nieuw.length + ' transacties geïmporteerd'); } }, 'Importeer ' + r.nieuw.length)));
